@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Dashboard</title>
+  <link rel="stylesheet" href="public/styles.css" />
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div>
+        <h2 id="hello">Dashboard</h2>
+        <div class="badge" id="role-badge">–</div>
+      </div>
+      <div class="row" style="max-width:420px; justify-content:flex-end;">
+        <button id="btn-share">Compartilhar: OFF</button>
+        <button id="btn-logout">Sair</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Meus dados</h3>
+      <div class="row">
+        <input id="f-username" placeholder="Nome de usuário" />
+        <input id="f-club" placeholder="Clube" />
+        <input id="f-age" type="number" placeholder="Idade" />
+      </div>
+      <small id="share-link"></small>
+      <div style="margin-top:10px;">
+        <button id="btn-save-self">Salvar meus dados</button>
+      </div>
+    </div>
+
+    <div style="height:12px;"></div>
+
+    <div class="card">
+      <div class="tabs">
+        <div class="tab active" data-tab="classes">Classes concluídas</div>
+        <div class="tab" data-tab="specialties">Especialidades concluídas</div>
+      </div>
+      <div id="tab-content"></div>
+    </div>
+
+    <div style="height:12px;"></div>
+
+    <div class="card" id="manager-panel" style="display:none;">
+      <h3>Gerenciar (Tier1): usuários do meu clube (Tier2)</h3>
+      <div class="row">
+        <input id="search-user" placeholder="Buscar por username" />
+        <button id="btn-search">Buscar</button>
+      </div>
+      <div id="manage-list" class="list" style="margin-top:10px;"></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase.js"></script>
+  <script src="dashboard.js"></script>
+</body>
+</html>
