@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Login</title>
+  <script src="https://unpkg.com/@supabase/supabase-js"></script>
+  <script src="supabase.js"></script>
+  <style>
+    body { background: #0f1117; color: #fff; font-family: Arial; text-align: center; margin-top: 80px; }
+    input, button { padding: 8px; margin: 8px; border-radius: 4px; border: none; }
+    input { width: 250px; background: #1c212a; color: #fff; border: 1px solid #333; }
+    button { background: #1f6feb; color: white; cursor: pointer; }
+    a { color: #38a0ff; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <h2>Entrar</h2>
+
+  <input type="text" id="username" placeholder="Nome de usuário" /><br>
+  <input type="password" id="password" placeholder="Senha" /><br>
+  <button id="loginBtn">Entrar</button>
+  <p>Não tem conta? <a href="register.html">Cadastre-se</a></p>
+
+  <script>
+    const loginBtn = document.getElementById("loginBtn");
+
+    loginBtn.addEventListener("click", async () => {
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value.trim();
+
+      if (!username || !password) {
+        alert("Preencha todos os campos.");
+        return;
+      }
+
+      // 🔍 1️⃣ Busca o e-mail do usuário pelo username
+      const { data: userRow, error: searchError } = await supabase
+        .from("profiles")
+        .select("id, username, email")
+        .eq("username", username)
+        .single();
+
+      if (searchError || !userRow) {
+        alert("Usuário não encontrado.");
+        console.error(searchError);
+        return;
+      }
+
+      // ⚙️ 2️⃣ Faz login com o e-mail correspondente
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: userRow.email,
+        password: password,
+      });
+
+      if (error) {
+        alert("Erro ao entrar: " + error.message);
+        console.error(error);
+        return;
+      }
+
+      // 💾 3️⃣ Guarda dados no localStorage
+      localStorage.setItem("userData", JSON.stringify({
+        id: data.user.id,
+        username: userRow.username,
+        email: userRow.email
+      }));
+
+      // 🚀 4️⃣ Redireciona
+      window.location.href = "dashboard.html";
+    });
+  </script>
+</body>
+</html>

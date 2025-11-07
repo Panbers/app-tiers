@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Cadastro</title>
+  <script src="https://unpkg.com/@supabase/supabase-js"></script>
+  <script src="supabase.js"></script>
+  <style>
+    body { background: #0f1117; color: #fff; font-family: Arial; text-align: center; margin-top: 80px; }
+    input, button { padding: 8px; margin: 8px; border-radius: 4px; border: none; }
+    input { width: 250px; background: #1c212a; color: #fff; border: 1px solid #333; }
+    button { background: #1f6feb; color: white; cursor: pointer; }
+    a { color: #38a0ff; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <h2>Cadastro</h2>
+
+  <input type="text" id="username" placeholder="Nome de usuário" /><br>
+  <input type="email" id="email" placeholder="E-mail" /><br>
+  <input type="password" id="password" placeholder="Senha" /><br>
+  <button id="registerBtn">Registrar</button>
+  <p>Já tem conta? <a href="login.html">Entrar</a></p>
+
+  <script>
+    const registerBtn = document.getElementById("registerBtn");
+
+    registerBtn.addEventListener("click", async () => {
+      const username = document.getElementById("username").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
+
+      if (!username || !email || !password) {
+        alert("Preencha todos os campos.");
+        return;
+      }
+
+      // 1️⃣ Cria o usuário no Auth
+      const { data, error } = await supabase.auth.signUp({ email, password });
+
+      if (error) {
+        alert("Erro ao registrar: " + error.message);
+        console.error(error);
+        return;
+      }
+
+      // 2️⃣ Cria perfil vinculado
+      const { error: insertError } = await supabase.from("profiles").insert([
+        { id: data.user.id, username, email }
+      ]);
+
+      if (insertError) {
+        console.error(insertError);
+        alert("Erro ao salvar perfil.");
+        return;
+      }
+
+      alert("Cadastro realizado com sucesso!");
+      window.location.href = "login.html";
+    });
+  </script>
+</body>
+</html>

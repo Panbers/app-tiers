@@ -2,49 +2,181 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dashboard</title>
+
+  <!-- Estilo simples -->
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #0f1117;
+      color: white;
+      margin: 0;
+      padding: 0;
+    }
+    .sidebar {
+      width: 220px;
+      background-color: #151a22;
+      height: 100vh;
+      position: fixed;
+      padding: 20px;
+    }
+    .content {
+      margin-left: 250px;
+      padding: 20px;
+    }
+    button {
+      background: #1f6feb;
+      color: white;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #388bfd;
+    }
+    input {
+      background: #1c212a;
+      color: white;
+      border: 1px solid #333;
+      border-radius: 4px;
+      padding: 6px;
+      margin-bottom: 10px;
+      width: 250px;
+    }
+  </style>
+
+  <!-- Biblioteca Supabase -->
   <script src="https://unpkg.com/@supabase/supabase-js"></script>
-  <script src="supabase.js"></script>
-  <script defer src="dashboard.js"></script>
-  <link rel="stylesheet" href="public/style.css">
 </head>
 <body>
-  <h1>Dashboard</h1>
-  <button id="logout">Sair</button>
-
-  <h2>Meus dados</h2>
-<form id="profile-form">
-  <label>Nome de usuário</label>
-  <input type="text" id="username" readonly>
-
-  <label>Clube</label>
-  <!-- input com datalist para autocomplete -->
-  <input type="text" id="clubName" list="clubsList" placeholder="Digite para buscar clubes" autocomplete="off">
-  <datalist id="clubsList"></datalist>
-  <!-- campo escondido que guarda o ID do club selecionado -->
-  <input type="hidden" id="clubId">
-
-  <label>Data de nascimento</label>
-  <input type="date" id="birthdate">
-
-  <label>Idade</label>
-  <span id="ageDisplay">–</span> anos
-
-  <button type="submit">Salvar meus dados</button>
-</form>
-
-<h3>Classes e Especialidades</h3>
-<div id="extras" style="opacity:.4;pointer-events:none">
-  <p>Somente usuários Tier 1 ou S podem adicionar classes e especialidades.</p>
-  <!-- sua UI de classes/especialidades pode ficar aqui dentro -->
-</div>
-
-  <h3>Classes e Especialidades</h3>
-  <p>Preencha seu clube e data de nascimento para desbloquear esta área.</p>
-  <div id="extras" style="opacity:0.5; pointer-events:none;">
-    <input type="text" placeholder="Nome da classe">
-    <input type="date">
-    <button>Adicionar</button>
+  <div class="sidebar">
+    <h2>Dashboard</h2>
+    <button id="logoutBtn">Sair</button>
   </div>
+
+  <div class="content">
+    <h2>Meus dados</h2>
+    <p><b>Nome de usuário:</b> <span id="username">Carregando...</span></p>
+
+    <label>Clube</label><br />
+    <input id="club" placeholder="Ex: Clube Alfa" /><br />
+
+    <label>Data de nascimento</label><br />
+    <input type="date" id="birthdate" /><br />
+
+    <p>Idade: <span id="age">0</span> anos</p>
+    <button id="saveBtn">Salvar meus dados</button>
+
+    <hr />
+
+    <h3>Classes e Especialidades</h3>
+    <p id="classMsg">
+      Somente usuários Tier 1 ou S podem adicionar classes e especialidades.
+    </p>
+  </div>
+
+  <script>
+    // ==============================
+    // CONFIGURAÇÃO DO SUPABASE
+    // ==============================
+    const SUPABASE_URL = "https://mqlhexjnvmjzxpyzmzur.supabase.co";
+    const SUPABASE_ANON_KEY = "SUA_CHAVE_ANON_AQUI"; // ⚠️ Use a mesma que funcionou no teste
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // ==============================
+    // VARIÁVEIS GLOBAIS
+    // ==============================
+    const usernameEl = document.getElementById("username");
+    const clubInput = document.getElementById("club");
+    const birthdateInput = document.getElementById("birthdate");
+    const ageEl = document.getElementById("age");
+    const saveBtn = document.getElementById("saveBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    // ==============================
+    // FUNÇÃO PARA CALCULAR IDADE
+    // ==============================
+    function calcularIdade(data) {
+      if (!data) return 0;
+      const hoje = new Date();
+      const nascimento = new Date(data);
+      let idade = hoje.getFullYear() - nascimento.getFullYear();
+      const m = hoje.getMonth() - nascimento.getMonth();
+      if (m < 0 || (m === 0 && hoje.getDate() < nascimento.getDate())) idade--;
+      return idade;
+    }
+
+    // ==============================
+    // CARREGAR PERFIL DO USUÁRIO
+    // ==============================
+    async function carregarPerfil() {
+      const userData = JSON.parse(localStorage.getItem("userData"));
+      if (!userData || !userData.id) {
+        alert("Sessão expirada. Faça login novamente.");
+        window.location.href = "login.html";
+        return;
+      }
+
+      usernameEl.textContent = userData.username;
+
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("club_id, birthdate")
+        .eq("id", userData.id)
+        .single();
+
+      if (error) {
+        console.error("Erro ao carregar perfil:", error);
+        return;
+      }
+
+      if (data) {
+        clubInput.value = data.club_id || "";
+        birthdateInput.value = data.birthdate || "";
+        ageEl.textContent = calcularIdade(data.birthdate);
+      }
+    }
+
+    // ==============================
+    // SALVAR ALTERAÇÕES
+    // ==============================
+    saveBtn.addEventListener("click", async () => {
+      const userData = JSON.parse(localStorage.getItem("userData"));
+      if (!userData) return alert("Sessão inválida. Faça login novamente.");
+
+      const updates = {
+        club_id: clubInput.value,
+        birthdate: birthdateInput.value,
+      };
+
+      const { error } = await supabase
+        .from("profiles")
+        .update(updates)
+        .eq("id", userData.id);
+
+      if (error) {
+        console.error("Erro ao salvar:", error);
+        alert("Erro ao salvar dados.");
+      } else {
+        alert("Dados salvos com sucesso!");
+        ageEl.textContent = calcularIdade(birthdateInput.value);
+      }
+    });
+
+    // ==============================
+    // BOTÃO DE SAIR
+    // ==============================
+    logoutBtn.addEventListener("click", () => {
+      localStorage.removeItem("userData");
+      window.location.href = "login.html";
+    });
+
+    // ==============================
+    // INICIALIZAÇÃO
+    // ==============================
+    carregarPerfil();
+  </script>
 </body>
 </html>
