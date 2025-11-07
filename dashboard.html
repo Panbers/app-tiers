@@ -1,61 +1,50 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="UTF-8" />
   <title>Dashboard</title>
-  <link rel="stylesheet" href="public/styles.css" />
+  <script src="https://unpkg.com/@supabase/supabase-js"></script>
+  <script src="supabase.js"></script>
+  <script defer src="dashboard.js"></script>
+  <link rel="stylesheet" href="public/style.css">
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <div>
-        <h2 id="hello">Dashboard</h2>
-        <div class="badge" id="role-badge">–</div>
-      </div>
-      <div class="row" style="max-width:420px; justify-content:flex-end;">
-        <button id="btn-share">Compartilhar: OFF</button>
-        <button id="btn-logout">Sair</button>
-      </div>
-    </div>
+  <h1>Dashboard</h1>
+  <button id="logout">Sair</button>
 
-    <div class="card">
-      <h3>Meus dados</h3>
-      <div class="row">
-        <input id="f-username" placeholder="Nome de usuário" />
-        <input id="f-club" placeholder="Clube" />
-        <input id="f-age" type="number" placeholder="Idade" />
-      </div>
-      <small id="share-link"></small>
-      <div style="margin-top:10px;">
-        <button id="btn-save-self">Salvar meus dados</button>
-      </div>
-    </div>
+  <h2>Meus dados</h2>
+<form id="profile-form">
+  <label>Nome de usuário</label>
+  <input type="text" id="username" readonly>
 
-    <div style="height:12px;"></div>
+  <label>Clube</label>
+  <!-- input com datalist para autocomplete -->
+  <input type="text" id="clubName" list="clubsList" placeholder="Digite para buscar clubes" autocomplete="off">
+  <datalist id="clubsList"></datalist>
+  <!-- campo escondido que guarda o ID do club selecionado -->
+  <input type="hidden" id="clubId">
 
-    <div class="card">
-      <div class="tabs">
-        <div class="tab active" data-tab="classes">Classes concluídas</div>
-        <div class="tab" data-tab="specialties">Especialidades concluídas</div>
-      </div>
-      <div id="tab-content"></div>
-    </div>
+  <label>Data de nascimento</label>
+  <input type="date" id="birthdate">
 
-    <div style="height:12px;"></div>
+  <label>Idade</label>
+  <span id="ageDisplay">–</span> anos
 
-    <div class="card" id="manager-panel" style="display:none;">
-      <h3>Gerenciar (Tier1): usuários do meu clube (Tier2)</h3>
-      <div class="row">
-        <input id="search-user" placeholder="Buscar por username" />
-        <button id="btn-search">Buscar</button>
-      </div>
-      <div id="manage-list" class="list" style="margin-top:10px;"></div>
-    </div>
+  <button type="submit">Salvar meus dados</button>
+</form>
+
+<h3>Classes e Especialidades</h3>
+<div id="extras" style="opacity:.4;pointer-events:none">
+  <p>Somente usuários Tier 1 ou S podem adicionar classes e especialidades.</p>
+  <!-- sua UI de classes/especialidades pode ficar aqui dentro -->
+</div>
+
+  <h3>Classes e Especialidades</h3>
+  <p>Preencha seu clube e data de nascimento para desbloquear esta área.</p>
+  <div id="extras" style="opacity:0.5; pointer-events:none;">
+    <input type="text" placeholder="Nome da classe">
+    <input type="date">
+    <button>Adicionar</button>
   </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase.js"></script>
-  <script src="dashboard.js"></script>
 </body>
 </html>

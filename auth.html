@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login / Cadastro</title>
+  <link rel="stylesheet" href="public/style/style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>App Tiers - Acesso</h1>
+
+    <div id="form-section">
+      <input id="username" type="text" placeholder="Usuário" required />
+      <input id="password" type="password" placeholder="Senha" required />
+
+      <button id="btnLogin">Entrar</button>
+      <button id="btnRegister" class="secondary">Registrar</button>
+
+      <p id="msg"></p>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/@supabase/supabase-js"></script>
+  <script src="supabase.js"></script>
+  <script src="auth.js"></script>
+</body>
+</html>

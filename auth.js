@@ -1,38 +1,63 @@
-(async function () {
-  // Redireciona se já logado
-  const { data: { session } } = await supabase.auth.getSession();
-  if (session) location.href = "dashboard.html";
+// auth.js
 
-  document.getElementById("btn-signup").onclick = async () => {
-    const username = document.getElementById("su-username").value.trim();
-    const club = document.getElementById("su-club").value.trim();
-    const age = parseInt(document.getElementById("su-age").value || "0", 10);
-    const email = document.getElementById("su-email").value.trim();
-    const pass = document.getElementById("su-pass").value;
+// Cria um e-mail sintético com base no username
+function fakeEmail(username) {
+  return `${username}@app.com`;
+}
 
-    if (!username || !club || !email || !pass) {
-      alert("Preencha username, clube, email e senha.");
-      return;
-    }
+// Mostra mensagens simples
+function showMsg(text, color = "black") {
+  const msg = document.getElementById("msg");
+  msg.textContent = text;
+  msg.style.color = color;
+}
 
-    const { data: signUpData, error } = await supabase.auth.signUp({ email, password: pass });
-    if (error) return alert(error.message);
+// Registro de novo usuário
+document.getElementById("btnRegister").addEventListener("click", async () => {
+  const username = document.getElementById("username").value.trim();
+  const password = document.getElementById("password").value.trim();
 
-    // Cria o perfil (mesmo id do usuário auth)
-    const userId = signUpData.user.id;
-    const { error: insErr } = await supabase.from("profiles").insert({
-      id: userId, username, club, age, role: "tier2", share_enabled: false
-    });
-    if (insErr) return alert(insErr.message);
+  if (!username || !password) {
+    showMsg("Preencha usuário e senha.", "red");
+    return;
+  }
 
-    alert("Cadastro feito! Verifique seu email (se exigido) e faça login.");
-  };
+  const email = fakeEmail(username);
 
-  document.getElementById("btn-login").onclick = async () => {
-    const email = document.getElementById("li-email").value.trim();
-    const pass = document.getElementById("li-pass").value;
-    const { error } = await supabase.auth.signInWithPassword({ email, password: pass });
-    if (error) return alert(error.message);
-    location.href = "dashboard.html";
-  };
-})();
+  const { data, error } = await supabase.auth.signUp({
+    email: email,
+    password: password,
+  });
+
+  if (error) {
+    showMsg("Erro no cadastro: " + error.message, "red");
+  } else {
+    showMsg("Usuário cadastrado! Faça login.", "green");
+  }
+});
+
+// Login de usuário existente
+document.getElementById("btnLogin").addEventListener("click", async () => {
+  const username = document.getElementById("username").value.trim();
+  const password = document.getElementById("password").value.trim();
+
+  if (!username || !password) {
+    showMsg("Preencha usuário e senha.", "red");
+    return;
+  }
+
+  const email = fakeEmail(username);
+
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: email,
+    password: password,
+  });
+
+  if (error) {
+    showMsg("Erro no login: " + error.message, "red");
+  } else {
+    // Salva sessão e redireciona
+    localStorage.setItem("sbSession", JSON.stringify(data.session));
+    window.location.href = "dashboard.html";
+  }
+});
