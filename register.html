@@ -2,62 +2,104 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Cadastro</title>
-  <script src="https://unpkg.com/@supabase/supabase-js"></script>
-  <script src="supabase.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registrar - App Tiers</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    body { background: #0f1117; color: #fff; font-family: Arial; text-align: center; margin-top: 80px; }
-    input, button { padding: 8px; margin: 8px; border-radius: 4px; border: none; }
-    input { width: 250px; background: #1c212a; color: #fff; border: 1px solid #333; }
-    button { background: #1f6feb; color: white; cursor: pointer; }
-    a { color: #38a0ff; text-decoration: none; }
+    body {
+      background-color: #0f0f0f;
+      color: white;
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .container {
+      background-color: #1a1a1a;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+      text-align: center;
+      width: 350px;
+    }
+
+    input {
+      width: 90%;
+      padding: 10px;
+      margin: 8px 0;
+      border: none;
+      border-radius: 6px;
+      background-color: #2a2a2a;
+      color: white;
+    }
+
+    button {
+      width: 95%;
+      padding: 10px;
+      border: none;
+      border-radius: 6px;
+      background-color: #006aff;
+      color: white;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    button:hover {
+      background-color: #0053cc;
+    }
+
+    a {
+      color: #3399ff;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
-  <h2>Cadastro</h2>
-
-  <input type="text" id="username" placeholder="Nome de usuário" /><br>
-  <input type="email" id="email" placeholder="E-mail" /><br>
-  <input type="password" id="password" placeholder="Senha" /><br>
-  <button id="registerBtn">Registrar</button>
-  <p>Já tem conta? <a href="login.html">Entrar</a></p>
+  <div class="container">
+    <h2>Criar Conta</h2>
+    <input type="text" id="username" placeholder="Nome de usuário" required>
+    <input type="password" id="password" placeholder="Senha" required>
+    <button onclick="register()">Registrar</button>
+    <p>Já tem conta? <a href="login.html">Entrar</a></p>
+  </div>
 
   <script>
-    const registerBtn = document.getElementById("registerBtn");
+    const supabaseUrl = "https://mlghexjnyjmjzpxymzur.supabase.co";
+    const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xbGhleGpudm1qenhweXptenVyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI0NjI3NjcsImV4cCI6MjA3ODAzODc2N30.CGI5Sizgbi5egZkEyMpeNQvLOcV_hLsJyBNc9J10vEw"; // 🔒 Substitua pela sua chave pública anon
+    const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
-    registerBtn.addEventListener("click", async () => {
+    async function register() {
       const username = document.getElementById("username").value.trim();
-      const email = document.getElementById("email").value.trim();
       const password = document.getElementById("password").value.trim();
 
-      if (!username || !email || !password) {
-        alert("Preencha todos os campos.");
+      if (!username || !password) {
+        alert("Por favor, preencha todos os campos.");
         return;
       }
 
-      // 1️⃣ Cria o usuário no Auth
-      const { data, error } = await supabase.auth.signUp({ email, password });
+      // 🔹 Cria o usuário no Supabase Auth usando username como "email fake"
+      const emailFake = `${username}@apptiers.local`;
+
+      const { data, error } = await supabase.auth.signUp({
+        email: emailFake,
+        password: password,
+      });
 
       if (error) {
+        console.error("Erro ao registrar:", error.message);
         alert("Erro ao registrar: " + error.message);
-        console.error(error);
-        return;
+      } else {
+        console.log("Usuário registrado:", data.user);
+        alert("Conta criada com sucesso! Agora você pode fazer login.");
+        window.location.href = "login.html";
       }
-
-      // 2️⃣ Cria perfil vinculado
-      const { error: insertError } = await supabase.from("profiles").insert([
-        { id: data.user.id, username, email }
-      ]);
-
-      if (insertError) {
-        console.error(insertError);
-        alert("Erro ao salvar perfil.");
-        return;
-      }
-
-      alert("Cadastro realizado com sucesso!");
-      window.location.href = "login.html";
-    });
+    }
   </script>
 </body>
 </html>

@@ -3,128 +3,103 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dashboard</title>
-
-  <!-- Estilo simples -->
+  <title>Dashboard - App Tiers</title>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script src="supabase.js"></script>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background-color: #0f1117;
+      background-color: #0d0d0d;
       color: white;
+      font-family: Arial, sans-serif;
       margin: 0;
       padding: 0;
     }
-    .sidebar {
-      width: 220px;
-      background-color: #151a22;
-      height: 100vh;
-      position: fixed;
-      padding: 20px;
+    .container {
+      max-width: 600px;
+      margin: 50px auto;
+      background: #1a1a1a;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.7);
     }
-    .content {
-      margin-left: 250px;
-      padding: 20px;
+    h1, h2 {
+      text-align: center;
+    }
+    .info {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+    }
+    input {
+      width: 100%;
+      padding: 8px;
+      border-radius: 5px;
+      border: none;
+      margin-top: 5px;
     }
     button {
-      background: #1f6feb;
+      width: 100%;
+      padding: 10px;
+      margin-top: 15px;
+      background-color: #0066ff;
       color: white;
       border: none;
-      padding: 8px 14px;
       border-radius: 5px;
       cursor: pointer;
     }
     button:hover {
-      background: #388bfd;
+      background-color: #0052cc;
     }
-    input {
-      background: #1c212a;
-      color: white;
-      border: 1px solid #333;
-      border-radius: 4px;
-      padding: 6px;
-      margin-bottom: 10px;
-      width: 250px;
+    #logout {
+      background-color: #d93636;
+    }
+    #logout:hover {
+      background-color: #b82b2b;
     }
   </style>
-
-  <!-- Biblioteca Supabase -->
-  <script src="https://unpkg.com/@supabase/supabase-js"></script>
 </head>
 <body>
-  <div class="sidebar">
-    <h2>Dashboard</h2>
-    <button id="logoutBtn">Sair</button>
-  </div>
+  <div class="container">
+    <h1>Dashboard</h1>
+    <button id="logout" onclick="logout()">Sair</button>
 
-  <div class="content">
     <h2>Meus dados</h2>
-    <p><b>Nome de usuário:</b> <span id="username">Carregando...</span></p>
 
-    <label>Clube</label><br />
-    <input id="club" placeholder="Ex: Clube Alfa" /><br />
+    <div class="info">
+      <label>Nome de usuário</label>
+      <input type="text" id="username" readonly />
 
-    <label>Data de nascimento</label><br />
-    <input type="date" id="birthdate" /><br />
+      <label>Clube</label>
+      <input type="text" id="club" placeholder="Ex: Clube Alfa" />
 
-    <p>Idade: <span id="age">0</span> anos</p>
-    <button id="saveBtn">Salvar meus dados</button>
+      <label>Data de nascimento</label>
+      <input type="date" id="birthdate" />
 
-    <hr />
+      <p id="ageText">Idade: -</p>
 
-    <h3>Classes e Especialidades</h3>
-    <p id="classMsg">
-      Somente usuários Tier 1 ou S podem adicionar classes e especialidades.
-    </p>
+      <button onclick="saveProfile()">Salvar meus dados</button>
+    </div>
   </div>
 
   <script>
-    // ==============================
-    // CONFIGURAÇÃO DO SUPABASE
-    // ==============================
-    const SUPABASE_URL = "https://mqlhexjnvmjzxpyzmzur.supabase.co";
-    const SUPABASE_ANON_KEY = "SUA_CHAVE_ANON_AQUI"; // ⚠️ Use a mesma que funcionou no teste
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-    // ==============================
-    // VARIÁVEIS GLOBAIS
-    // ==============================
-    const usernameEl = document.getElementById("username");
-    const clubInput = document.getElementById("club");
-    const birthdateInput = document.getElementById("birthdate");
-    const ageEl = document.getElementById("age");
-    const saveBtn = document.getElementById("saveBtn");
-    const logoutBtn = document.getElementById("logoutBtn");
-
-    // ==============================
-    // FUNÇÃO PARA CALCULAR IDADE
-    // ==============================
-    function calcularIdade(data) {
-      if (!data) return 0;
-      const hoje = new Date();
-      const nascimento = new Date(data);
-      let idade = hoje.getFullYear() - nascimento.getFullYear();
-      const m = hoje.getMonth() - nascimento.getMonth();
-      if (m < 0 || (m === 0 && hoje.getDate() < nascimento.getDate())) idade--;
-      return idade;
+    // 🔒 Protege o acesso
+    async function checkAuth() {
+      const { data, error } = await supabase.auth.getUser();
+      if (error || !data.user) {
+        window.location.href = "login.html";
+      } else {
+        loadProfile(data.user);
+      }
     }
 
-    // ==============================
-    // CARREGAR PERFIL DO USUÁRIO
-    // ==============================
-    async function carregarPerfil() {
-      const userData = JSON.parse(localStorage.getItem("userData"));
-      if (!userData || !userData.id) {
-        alert("Sessão expirada. Faça login novamente.");
-        window.location.href = "login.html";
-        return;
-      }
-
-      usernameEl.textContent = userData.username;
-
+    // 🔄 Carrega dados do perfil
+    async function loadProfile(user) {
       const { data, error } = await supabase
         .from("profiles")
-        .select("club_id, birthdate")
-        .eq("id", userData.id)
+        .select("*")
+        .eq("id", user.id)
         .single();
 
       if (error) {
@@ -132,51 +107,60 @@
         return;
       }
 
-      if (data) {
-        clubInput.value = data.club_id || "";
-        birthdateInput.value = data.birthdate || "";
-        ageEl.textContent = calcularIdade(data.birthdate);
+      document.getElementById("username").value = data.username || "";
+      document.getElementById("club").value = data.club_name || "";
+      if (data.birthdate) {
+        document.getElementById("birthdate").value = data.birthdate;
+        atualizarIdade(data.birthdate);
       }
     }
 
-    // ==============================
-    // SALVAR ALTERAÇÕES
-    // ==============================
-    saveBtn.addEventListener("click", async () => {
-      const userData = JSON.parse(localStorage.getItem("userData"));
-      if (!userData) return alert("Sessão inválida. Faça login novamente.");
+    // 💾 Atualiza dados no Supabase
+    async function saveProfile() {
+      const { data: authData } = await supabase.auth.getUser();
+      const user = authData.user;
 
-      const updates = {
-        club_id: clubInput.value,
-        birthdate: birthdateInput.value,
-      };
+      const club = document.getElementById("club").value.trim();
+      const birthdate = document.getElementById("birthdate").value;
 
       const { error } = await supabase
         .from("profiles")
-        .update(updates)
-        .eq("id", userData.id);
+        .update({
+          club_name: club || null,
+          birthdate: birthdate || null,
+        })
+        .eq("id", user.id);
 
       if (error) {
         console.error("Erro ao salvar:", error);
-        alert("Erro ao salvar dados.");
+        alert("Erro ao salvar dados!");
       } else {
         alert("Dados salvos com sucesso!");
-        ageEl.textContent = calcularIdade(birthdateInput.value);
+        if (birthdate) atualizarIdade(birthdate);
       }
-    });
+    }
 
-    // ==============================
-    // BOTÃO DE SAIR
-    // ==============================
-    logoutBtn.addEventListener("click", () => {
-      localStorage.removeItem("userData");
+    // 🧮 Calcula idade
+    function atualizarIdade(dataNasc) {
+      const hoje = new Date();
+      const nascimento = new Date(dataNasc);
+      let idade = hoje.getFullYear() - nascimento.getFullYear();
+      const m = hoje.getMonth() - nascimento.getMonth();
+      if (m < 0 || (m === 0 && hoje.getDate() < nascimento.getDate())) {
+        idade--;
+      }
+      document.getElementById("ageText").innerText = `Idade: ${idade} anos`;
+    }
+
+    // 🚪 Logout
+    async function logout() {
+      await supabase.auth.signOut();
+      localStorage.clear();
       window.location.href = "login.html";
-    });
+    }
 
-    // ==============================
-    // INICIALIZAÇÃO
-    // ==============================
-    carregarPerfil();
+    // 👟 Inicia tudo
+    document.addEventListener("DOMContentLoaded", checkAuth);
   </script>
 </body>
 </html>
