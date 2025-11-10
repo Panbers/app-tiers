@@ -1,22 +1,18 @@
-(async function () {
-  const params = new URLSearchParams(location.search);
-  const u = params.get("u");
-  const card = document.getElementById("card");
-  if (!u) { card.textContent = "Usuário não informado."; return; }
+const { createClient } = supabase;
+const supabaseClient = createClient("https://mlghexjnyjmjzpxymzur.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xbGhleGpudm1qenhweXptenVyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI0NjI3NjcsImV4cCI6MjA3ODAzODc2N30.CGI5Sizgbi5egZkEyMpeNQvLOcV_hLsJyBNc9J10vEw");
 
-  // Leitura anônima só funciona quando share_enabled = true (política RLS)
-  const { data: prof, error } = await supabase.from("profiles")
-    .select("id, username, club, age, role, share_enabled")
-    .eq("username", u)
-    .maybeSingle();
+async function loadPublicProfile() {
+  const params = new URLSearchParams(window.location.search);
+  const username = params.get("u");
+  if (!username) return document.body.innerHTML = "<p>Perfil não encontrado.</p>";
 
-  if (error) { card.textContent = error.message; return; }
-  if (!prof || !prof.share_enabled) { card.textContent = "Perfil não compartilhado."; return; }
+  const { data, error } = await supabaseClient.from("profiles").select("*").eq("username", username).eq("share_enabled", true).single();
+  if (error || !data) return document.body.innerHTML = "<p>Perfil privado ou inexistente.</p>";
 
-  // Carrega listas públicas (apenas leitura se desejar – aqui deixaremos fechado por padrão)
-  card.innerHTML = `
-    <h2>@${prof.username} <span class="badge">${prof.role.toUpperCase()}</span></h2>
-    <div>Clube: <b>${prof.club}</b> · Idade: <b>${prof.age ?? "-"}</b></div>
-    <div style="margin-top:8px;font-size:12px;">Este perfil está compartilhado publicamente.</div>
+  document.getElementById("profile").innerHTML = `
+    <p><b>Usuário:</b> ${data.username}</p>
+    <p><b>Tier:</b> ${data.role}</p>
+    <p><b>Clube:</b> ${data.club_id || "—"}</p>
   `;
-})();
+}
+loadPublicProfile();
