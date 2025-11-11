@@ -14,18 +14,19 @@ async function loadDashboard() {
 
   // 🧾 Busca dados do perfil
   const { data: profile, error: profileError } = await supabaseClient
-    .from("profiles")
-    .select("*")
-    .eq("email", user.email)
-    .single();
+  .from("profiles")
+  .select("id, username, role, birthdate, email")
+  .eq("email", user.email)
+  .single();
 
-  if (profileError) {
-    console.error("Erro ao carregar perfil:", profileError);
-    alert("Erro ao carregar perfil. Faça login novamente.");
-    await supabaseClient.auth.signOut();
-    window.location.href = "login.html";
-    return;
-  }
+if (profileError) {
+  console.error("Erro ao carregar perfil:", profileError);
+  alert("Erro ao carregar perfil. Faça login novamente.");
+  await supabaseClient.auth.signOut();
+  window.location.href = "login.html";
+  return;
+}
+
 
   // 📋 Preenche os dados do perfil
   document.getElementById("username").textContent = profile.username;
