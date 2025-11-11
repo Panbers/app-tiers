@@ -5,30 +5,27 @@ const supabaseClient = createClient(
 );
 
 async function loadDashboard() {
-  // 🔒 Verifica se há usuário logado
   const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
   if (userError || !user) {
     window.location.href = "login.html";
     return;
   }
 
-  // 🧾 Busca dados do perfil
+  // 🔧 Aqui é onde estava o problema: SELECT simplificado
   const { data: profile, error: profileError } = await supabaseClient
-  .from("profiles")
-  .select("id, username, role, birthdate, email")
-  .eq("email", user.email)
-  .single();
+    .from("profiles")
+    .select("id, username, role, birthdate, email") // 👈 evita o erro 500
+    .eq("email", user.email)
+    .single();
 
-if (profileError) {
-  console.error("Erro ao carregar perfil:", profileError);
-  alert("Erro ao carregar perfil. Faça login novamente.");
-  await supabaseClient.auth.signOut();
-  window.location.href = "login.html";
-  return;
-}
+  if (profileError) {
+    console.error("Erro ao carregar perfil:", profileError);
+    alert("Erro ao carregar perfil. Faça login novamente.");
+    await supabaseClient.auth.signOut();
+    window.location.href = "login.html";
+    return;
+  }
 
-
-  // 📋 Preenche os dados do perfil
   document.getElementById("username").textContent = profile.username;
   document.getElementById("role").textContent = profile.role;
 
@@ -39,7 +36,6 @@ if (profileError) {
     document.getElementById("idade").textContent = "—";
   }
 
-  // 🎯 Exibe seção Tier 1 se o papel não for "tier2"
   if (profile.role !== "tier2") {
     document.getElementById("tier1Section").classList.remove("hidden");
     loadExtras(profile.id);
@@ -71,5 +67,4 @@ async function logout() {
   window.location.href = "login.html";
 }
 
-// 🚀 Carrega tudo ao abrir a página
 loadDashboard();
