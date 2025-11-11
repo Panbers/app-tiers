@@ -5,37 +5,37 @@ const supabaseClient = createClient(
 );
 
 async function loadDashboard() {
-  const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
-  if (userError || !user) {
-    window.location.href = "login.html";
-    return;
-  }
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) return (window.location.href = "login.html");
 
-  // 🔧 Aqui é onde estava o problema: SELECT simplificado
-  const { data: profile, error: profileError } = await supabaseClient
+  const { data: profile, error } = await supabaseClient
     .from("profiles")
-    .select("id, username, role, birthdate, email") // 👈 evita o erro 500
+    .select("id, username, role, birthdate, email")
     .eq("email", user.email)
     .single();
 
-  if (profileError) {
-    console.error("Erro ao carregar perfil:", profileError);
+  if (error) {
     alert("Erro ao carregar perfil. Faça login novamente.");
     await supabaseClient.auth.signOut();
-    window.location.href = "login.html";
-    return;
+    return (window.location.href = "login.html");
   }
 
   document.getElementById("username").textContent = profile.username;
   document.getElementById("role").textContent = profile.role;
 
+  // Exibe idade, se houver data
   if (profile.birthdate) {
-    const idade = new Date().getFullYear() - new Date(profile.birthdate).getFullYear();
+    const idade =
+      new Date().getFullYear() - new Date(profile.birthdate).getFullYear();
     document.getElementById("idade").textContent = idade + " anos";
   } else {
     document.getElementById("idade").textContent = "—";
   }
 
+  // Preenche o campo com a data
+  document.getElementById("birthdateInput").value = profile.birthdate || "";
+
+  // Mostra se for Tier1 ou TierS
   if (profile.role !== "tier2") {
     document.getElementById("tier1Section").classList.remove("hidden");
     loadExtras(profile.id);
@@ -55,11 +55,39 @@ async function loadExtras(userId) {
 
   const cDiv = document.getElementById("classes");
   cDiv.innerHTML =
-    "<h4>Classes:</h4>" + (classes?.map(c => `<p>${c.title}</p>`).join("") || "Nenhuma.");
+    "<h4>Classes:</h4>" +
+    (classes?.map((c) => `<p>${c.title}</p>`).join("") || "Nenhuma.");
 
   const sDiv = document.getElementById("specialties");
   sDiv.innerHTML =
-    "<h4>Especialidades:</h4>" + (specs?.map(s => `<p>${s.name}</p>`).join("") || "Nenhuma.");
+    "<h4>Especialidades:</h4>" +
+    (specs?.map((s) => `<p>${s.name}</p>`).join("") || "Nenhuma.");
+}
+
+async function salvarNascimento() {
+  const birthdate = document.getElementById("birthdateInput").value;
+  if (!birthdate) {
+    alert("Selecione uma data válida.");
+    return;
+  }
+
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) {
+    alert("Usuário não autenticado.");
+    return;
+  }
+
+  const { error } = await supabaseClient
+    .from("profiles")
+    .update({ birthdate })
+    .eq("email", user.email);
+
+  if (error) {
+    alert("Erro ao salvar: " + error.message);
+  } else {
+    alert("Data salva com sucesso!");
+    loadDashboard(); // recarrega para atualizar idade
+  }
 }
 
 async function logout() {

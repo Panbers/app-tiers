@@ -8,9 +8,30 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script defer src="dashboard.js"></script>
   <style>
-    body{background:#0f0f0f;color:white;font-family:Arial;padding:20px;}
-    .hidden{display:none;}
-    select,input{background:#1a1a1a;color:white;border:none;border-radius:6px;padding:6px;margin:5px;}
+    body {
+      background: #0f0f0f;
+      color: white;
+      font-family: Arial;
+      padding: 20px;
+    }
+    .hidden {
+      display: none;
+    }
+    select, input, button {
+      background: #1a1a1a;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 8px;
+      margin: 5px;
+    }
+    button {
+      background: #006aff;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #0053cc;
+    }
   </style>
 </head>
 <body>
@@ -18,11 +39,14 @@
   <div id="profile">
     <p><b>Usuário:</b> <span id="username"></span></p>
     <p><b>Função:</b> <span id="role"></span></p>
-    <p><b>Idade:</b> <span id="idade"></span></p>
+    <p><b>Idade:</b> <span id="idade">—</span></p>
+    <p><b>Data de nascimento:</b></p>
+    <input type="date" id="birthdateInput" />
+    <button onclick="salvarNascimento()">Salvar</button>
   </div>
 
   <div id="tier1Section" class="hidden">
-    <h3>Tier 1 / S - Classes e Especialidades</h3>
+    <h3>Tier 1 / S - Classes e Especialidades</h3>
     <div id="classes"></div>
     <div id="specialties"></div>
   </div>
