@@ -8,47 +8,38 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script defer src="dashboard.js"></script>
   <style>
-    body {
-      background: #0f0f0f;
-      color: white;
-      font-family: Arial;
-      padding: 20px;
-    }
-    .hidden {
-      display: none;
-    }
-    select, input, button {
-      background: #1a1a1a;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      padding: 8px;
-      margin: 5px;
-    }
-    button {
-      background: #006aff;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #0053cc;
-    }
+    body { background:#0f0f0f; color:white; font-family:Arial; padding:20px; }
+    .hidden { display:none; }
+    select, input, button { background:#1a1a1a; color:white; border:none; border-radius:6px; padding:6px; margin:5px; }
+    button { background:#006aff; cursor:pointer; }
+    button:hover { background:#0053cc; }
+    .section { margin-top:20px; padding:10px; border:1px solid #333; border-radius:8px; }
   </style>
 </head>
 <body>
   <h2>Dashboard</h2>
+
   <div id="profile">
     <p><b>Usuário:</b> <span id="username"></span></p>
     <p><b>Função:</b> <span id="role"></span></p>
-    <p><b>Idade:</b> <span id="idade">—</span></p>
-    <p><b>Data de nascimento:</b></p>
-    <input type="date" id="birthdateInput" />
-    <button onclick="salvarNascimento()">Salvar</button>
+    <p><b>Idade:</b> <span id="idade"></span></p>
   </div>
 
-  <div id="tier1Section" class="hidden">
-    <h3>Tier 1 / S - Classes e Especialidades</h3>
-    <div id="classes"></div>
-    <div id="specialties"></div>
+  <div id="clubInfo" class="section hidden">
+    <h3>Clube</h3>
+    <p id="clubName">—</p>
+  </div>
+
+  <div id="tier1Panel" class="section hidden">
+    <h3>👥 Painel Tier 1 – Gerenciar Membros do Clube</h3>
+    <div id="clubMembers"></div>
+  </div>
+
+  <div id="tierSPanel" class="section hidden">
+    <h3>🏆 Painel Tier S – Gerenciar Todos os Clubes</h3>
+    <input id="newClubName" placeholder="Novo nome do clube" />
+    <button onclick="criarClube()">Criar Clube</button>
+    <div id="allClubs"></div>
   </div>
 
   <button onclick="logout()">Sair</button>

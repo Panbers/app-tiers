@@ -5,89 +5,126 @@ const supabaseClient = createClient(
 );
 
 async function loadDashboard() {
-  const { data: { user } } = await supabaseClient.auth.getUser();
+  const {
+    data: { user },
+  } = await supabaseClient.auth.getUser();
   if (!user) return (window.location.href = "login.html");
 
-  const { data: profile, error } = await supabaseClient
+  const { data: profile } = await supabaseClient
     .from("profiles")
-    .select("id, username, role, birthdate, email")
+    .select("*")
     .eq("email", user.email)
     .single();
 
-  if (error) {
-    alert("Erro ao carregar perfil. Faça login novamente.");
-    await supabaseClient.auth.signOut();
-    return (window.location.href = "login.html");
-  }
+  if (!profile) return alert("Perfil não encontrado.");
 
   document.getElementById("username").textContent = profile.username;
   document.getElementById("role").textContent = profile.role;
 
-  // Exibe idade, se houver data
+  // Idade
   if (profile.birthdate) {
-    const idade =
-      new Date().getFullYear() - new Date(profile.birthdate).getFullYear();
-    document.getElementById("idade").textContent = idade + " anos";
-  } else {
-    document.getElementById("idade").textContent = "—";
+    const nasc = new Date(profile.birthdate);
+    const hoje = new Date();
+    let idade = hoje.getFullYear() - nasc.getFullYear();
+    if (
+      hoje.getMonth() < nasc.getMonth() ||
+      (hoje.getMonth() === nasc.getMonth() && hoje.getDate() < nasc.getDate())
+    )
+      idade--;
+    document.getElementById("idade").textContent = `${idade} anos`;
   }
 
-  // Preenche o campo com a data
-  document.getElementById("birthdateInput").value = profile.birthdate || "";
+  // Nome do clube
+  if (profile.club_id) {
+    const { data: club } = await supabaseClient
+      .from("clubs")
+      .select("name")
+      .eq("id", profile.club_id)
+      .single();
+    if (club) {
+      document.getElementById("clubName").textContent = club.name;
+      document.getElementById("clubInfo").classList.remove("hidden");
+    }
+  }
 
-  // Mostra se for Tier1 ou TierS
-  if (profile.role !== "tier2") {
-    document.getElementById("tier1Section").classList.remove("hidden");
-    loadExtras(profile.id);
+  // Painel Tier 1
+  if (profile.role === "tier1") {
+    document.getElementById("tier1Panel").classList.remove("hidden");
+    carregarMembrosDoClube(profile.club_id);
+  }
+
+  // Painel Tier S
+  if (profile.role === "tiers") {
+    document.getElementById("tierSPanel").classList.remove("hidden");
+    carregarTodosClubes();
   }
 }
 
-async function loadExtras(userId) {
-  const { data: classes } = await supabaseClient
-    .from("classes")
-    .select("*")
-    .eq("user_id", userId);
+async function carregarMembrosDoClube(clubId) {
+  const { data, error } = await supabaseClient
+    .from("profiles")
+    .select("id, username, role, birthdate")
+    .eq("club_id", clubId)
+    .eq("role", "tier2");
 
-  const { data: specs } = await supabaseClient
-    .from("specialties")
-    .select("*")
-    .eq("user_id", userId);
+  const div = document.getElementById("clubMembers");
+  if (error || !data) return (div.textContent = "Erro ao carregar membros.");
 
-  const cDiv = document.getElementById("classes");
-  cDiv.innerHTML =
-    "<h4>Classes:</h4>" +
-    (classes?.map((c) => `<p>${c.title}</p>`).join("") || "Nenhuma.");
-
-  const sDiv = document.getElementById("specialties");
-  sDiv.innerHTML =
-    "<h4>Especialidades:</h4>" +
-    (specs?.map((s) => `<p>${s.name}</p>`).join("") || "Nenhuma.");
+  div.innerHTML = data
+    .map(
+      (u) => `
+      <div style="margin-bottom:8px;border-bottom:1px solid #333;padding:5px;">
+        <b>${u.username}</b> — ${u.role}<br>
+        Nascimento: ${u.birthdate || "—"}<br>
+        <button onclick="promover('${u.id}')">Promover a Tier 1</button>
+      </div>`
+    )
+    .join("");
 }
 
-async function salvarNascimento() {
-  const birthdate = document.getElementById("birthdateInput").value;
-  if (!birthdate) {
-    alert("Selecione uma data válida.");
-    return;
-  }
-
-  const { data: { user } } = await supabaseClient.auth.getUser();
-  if (!user) {
-    alert("Usuário não autenticado.");
-    return;
-  }
-
+async function promover(userId) {
   const { error } = await supabaseClient
     .from("profiles")
-    .update({ birthdate })
-    .eq("email", user.email);
+    .update({ role: "tier1" })
+    .eq("id", userId);
+  if (error) alert("Erro: " + error.message);
+  else alert("Usuário promovido com sucesso!");
+}
 
-  if (error) {
-    alert("Erro ao salvar: " + error.message);
-  } else {
-    alert("Data salva com sucesso!");
-    loadDashboard(); // recarrega para atualizar idade
+async function carregarTodosClubes() {
+  const { data, error } = await supabaseClient.from("clubs").select("*");
+  const div = document.getElementById("allClubs");
+
+  if (error) return (div.textContent = "Erro ao carregar clubes.");
+  if (!data.length) return (div.textContent = "Nenhum clube cadastrado.");
+
+  div.innerHTML = data
+    .map(
+      (c) => `
+      <div style="margin-bottom:10px;border-bottom:1px solid #333;padding:5px;">
+        <b>${c.name}</b>
+        <button onclick="excluirClube('${c.id}')">Excluir</button>
+      </div>`
+    )
+    .join("");
+}
+
+async function criarClube() {
+  const nome = document.getElementById("newClubName").value.trim();
+  if (!nome) return alert("Digite o nome do clube.");
+  const { error } = await supabaseClient.from("clubs").insert([{ name: nome }]);
+  if (error) alert("Erro ao criar clube: " + error.message);
+  else {
+    alert("Clube criado!");
+    carregarTodosClubes();
   }
+}
+
+async function excluirClube(id) {
+  if (!confirm("Tem certeza que deseja excluir este clube?")) return;
+  const { error } = await supabaseClient.from("clubs").delete().eq("id", id);
+  if (error) alert("Erro: " + error.message);
+  else carregarTodosClubes();
 }
 
 async function logout() {
