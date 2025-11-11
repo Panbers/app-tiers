@@ -58,6 +58,11 @@ document.getElementById("btnLogin").addEventListener("click", async () => {
   } else {
     // Salva sessão e redireciona
     localStorage.setItem("sbSession", JSON.stringify(data.session));
-    window.location.href = "dashboard.html";
+    // Depois de autenticar e obter o perfil
+if (profile.role === 'tiers') {
+  window.location.href = 'tiers-dashboard.html';
+} else {
+  window.location.href = 'dashboard.html';
+}
   }
 });
