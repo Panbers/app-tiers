@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Painel Tier S — Gestão Global</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script defer src="./tiers-dashboard.js"></script>
+  <style>
+    :root { color-scheme: dark; }
+    body{margin:0;background:#0b0b0b;color:#fff;font-family:Inter,system-ui,Arial}
+    header{display:flex;gap:12px;align-items:center;padding:16px 20px;border-bottom:1px solid #222}
+    header h1{font-size:18px;margin:0}
+    .wrap{max-width:1100px;margin:20px auto;padding:0 16px;display:grid;gap:16px}
+    .card{background:#121212;border:1px solid #222;border-radius:12px;padding:16px}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    input,button{border-radius:8px;border:1px solid #2a2a2a;background:#161616;color:#fff;padding:10px}
+    input{min-width:240px;flex:1}
+    button{cursor:pointer}
+    button.primary{background:#2d6bff;border-color:#2d6bff}
+    button.danger{background:#2a0000;border-color:#500}
+    .list{display:grid;gap:10px;margin-top:10px}
+    .item{display:flex;gap:12px;align-items:center;justify-content:space-between;background:#151515;border:1px solid #222;padding:12px;border-radius:10px}
+    .pill{font-size:12px;padding:3px 8px;border-radius:999px;border:1px solid #2a2a2a;background:#101010}
+    .muted{opacity:.8}
+    .grow{flex:1}
+    .small{font-size:12px}
+    .grid{display:grid;gap:16px}
+    .two{grid-template-columns:1fr 1fr}
+    @media (max-width:900px){.two{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>👑 Painel Tier S</h1>
+    <span id="me" class="pill muted"></span>
+    <div class="grow"></div>
+    <a href="./dashboard.html" class="pill" style="text-decoration:none;color:#fff">← Voltar ao Dashboard</a>
+  </header>
+
+  <main class="wrap grid two">
+    <!-- USUÁRIOS -->
+    <section class="card">
+      <h2 style="margin:0 0 12px">🔎 Buscar usuários</h2>
+      <div class="row">
+        <input id="q" placeholder="Digite nome ou e-mail…" />
+        <button class="primary" id="btnSearch">Buscar</button>
+      </div>
+      <div class="list" id="usersList"></div>
+    </section>
+
+    <!-- CLUBES -->
+    <section class="card">
+      <h2 style="margin:0 0 12px">🏁 Gerenciar clubes</h2>
+      <div class="row">
+        <input id="clubName" placeholder="Novo clube…"/>
+        <button class="primary" id="btnCreateClub">Criar</button>
+      </div>
+      <div class="list" id="clubsList"></div>
+    </section>
+  </main>
+</body>
+</html>

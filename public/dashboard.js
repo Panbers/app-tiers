@@ -133,3 +133,15 @@ async function logout() {
 }
 
 loadDashboard();
+// Se for Tier S, mostra link de atalho para o painel global
+if (profile.role === "tiers") {
+  const link = document.createElement("a");
+  link.href = "./tiers-dashboard.html";
+  link.textContent = "👑 Abrir Painel Tier S";
+  link.className = "pill";
+  link.style.display = "inline-block";
+  link.style.marginTop = "12px";
+  link.style.textDecoration = "none";
+  link.style.color = "#fff";
+  document.getElementById("profile").appendChild(link);
+}
