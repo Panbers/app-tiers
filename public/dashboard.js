@@ -145,3 +145,78 @@ if (profile.role === "tiers") {
   link.style.color = "#fff";
   document.getElementById("profile").appendChild(link);
 }
+// === BUSCAR USUÁRIOS (TIER S) ===
+const btnSearchUser = document.getElementById('btnSearchUser');
+const searchUser = document.getElementById('searchUser');
+const usersList = document.getElementById('usersList');
+
+if (btnSearchUser) {
+  btnSearchUser.addEventListener('click', async () => {
+    const query = searchUser.value.trim();
+    if (!query) return alert('Digite algo para buscar.');
+
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, username, role, birthdate, club')
+      .or(`username.ilike.%${query}%, email.ilike.%${query}%, club.ilike.%${query}%`)
+      .order('username');
+
+    if (error) {
+      console.error('Erro ao buscar usuários:', error);
+      return alert('Erro ao buscar usuários.');
+    }
+
+    if (!data || data.length === 0) {
+      usersList.innerHTML = '<p>Nenhum usuário encontrado.</p>';
+      return;
+    }
+
+    usersList.innerHTML = data.map(u => `
+      <div class="flex justify-between items-center p-2 border-b border-gray-700">
+        <div>
+          <p><strong>${u.username}</strong> (${u.role})</p>
+          <p class="text-sm text-gray-400">${u.club || 'Sem clube'}</p>
+        </div>
+        <div class="flex gap-2">
+          <button class="bg-green-600 px-2 py-1 rounded" onclick="promoteUser('${u.id}', '${u.role}')">
+            ${u.role === 'tier2' ? 'Promover' : 'Rebaixar'}
+          </button>
+          <button class="bg-red-600 px-2 py-1 rounded" onclick="deleteUser('${u.id}')">Excluir</button>
+        </div>
+      </div>
+    `).join('');
+  });
+}
+
+// === PROMOVER OU REBAIXAR ===
+async function promoteUser(id, role) {
+  const newRole = role === 'tier2' ? 'tier1' : 'tier2';
+
+  const { error } = await supabase
+    .from('profiles')
+    .update({ role: newRole })
+    .eq('id', id);
+
+  if (error) {
+    console.error(error);
+    alert('Erro ao atualizar função.');
+  } else {
+    alert(`Usuário agora é ${newRole}!`);
+    btnSearchUser.click(); // recarrega lista
+  }
+}
+
+// === EXCLUIR USUÁRIO ===
+async function deleteUser(id) {
+  if (!confirm('Tem certeza que deseja excluir este usuário?')) return;
+
+  const { error } = await supabase.from('profiles').delete().eq('id', id);
+
+  if (error) {
+    console.error(error);
+    alert('Erro ao excluir.');
+  } else {
+    alert('Usuário excluído!');
+    btnSearchUser.click();
+  }
+}
