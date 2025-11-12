@@ -1,87 +1,78 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Painel Tier S - App Tiers</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Painel Tier S — Gestão Global</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script defer src="tiers-dashboard.js"></script>
+  <script defer src="./tiers-dashboard.js"></script>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #0f0f0f;
-      color: white;
-      margin: 0; padding: 20px;
-    }
-    h2, h3 { color: #00aaff; }
-    input, button, textarea {
-      background: #1a1a1a;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      padding: 8px;
-      margin: 5px;
-    }
-    button {
-      background: #007bff;
-      cursor: pointer;
-    }
-    button:hover { background: #005fcc; }
-    .card {
-      background: #1b1b1b;
-      border-radius: 10px;
-      padding: 15px;
-      margin: 15px 0;
-      box-shadow: 0 0 10px rgba(0,0,0,0.3);
-    }
-    .list-item {
-      padding: 5px 0;
-      border-bottom: 1px solid #333;
-    }
-    .flex { display: flex; gap: 8px; flex-wrap: wrap; }
-    #logout { background: #ff4444; }
+    :root { color-scheme: dark; }
+    body{margin:0;background:#0b0b0b;color:#fff;font-family:Inter,system-ui,Arial}
+    header{display:flex;gap:12px;align-items:center;padding:16px 20px;border-bottom:1px solid #222}
+    header h1{font-size:18px;margin:0}
+    .wrap{max-width:1100px;margin:20px auto;padding:0 16px;display:grid;gap:16px}
+    .card{background:#121212;border:1px solid #222;border-radius:12px;padding:16px}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    input,button{border-radius:8px;border:1px solid #2a2a2a;background:#161616;color:#fff;padding:10px}
+    input{min-width:240px;flex:1}
+    button{cursor:pointer}
+    button.primary{background:#2d6bff;border-color:#2d6bff}
+    button.danger{background:#2a0000;border-color:#500}
+    .list{display:grid;gap:10px;margin-top:10px}
+    .item{display:flex;gap:12px;align-items:center;justify-content:space-between;background:#151515;border:1px solid #222;padding:12px;border-radius:10px}
+    .pill{font-size:12px;padding:3px 8px;border-radius:999px;border:1px solid #2a2a2a;background:#101010}
+    .muted{opacity:.8}
+    .grow{flex:1}
+    .small{font-size:12px}
+    .grid{display:grid;gap:16px}
+    .two{grid-template-columns:1fr 1fr}
+    @media (max-width:900px){.two{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
-  <h2>👑 Painel Tier S</h2>
-  <button id="logout">Sair</button>
+  <header>
+    <h1>👑 Painel Tier S</h1>
+    <span id="me" class="pill muted"></span>
+    <div class="grow"></div>
+    <a href="./dashboard.html" class="pill" style="text-decoration:none;color:#fff">← Voltar ao Dashboard</a>
+  </header>
 
-  <div class="card">
-    <h3>🏫 Gerenciar Clubes</h3>
-    <div class="flex">
-      <input id="newClub" placeholder="Nome do novo clube">
-      <button onclick="createClub()">Adicionar Clube</button>
-    </div>
-    <div id="clubsList"></div>
-  </div>
+  <main class="wrap grid two">
+    <!-- USUÁRIOS -->
+    <section class="card">
+      <h2 style="margin:0 0 12px">🔎 Buscar usuários</h2>
+      <div class="row">
+        <input id="q" placeholder="Digite nome ou e-mail…" />
+        <button class="primary" id="btnSearch">Buscar</button>
+      </div>
+      <div class="list" id="usersList"></div>
+    </section>
 
-  <div class="card">
-    <h3>📘 Gerenciar Classes</h3>
-    <div class="flex">
-      <input id="newClass" placeholder="Nova classe">
-      <button onclick="createClass()">Adicionar</button>
-    </div>
-    <textarea id="classJson" rows="4" placeholder='Cole JSON [{"name":"Classe 1"}, {"name":"Classe 2"}]'></textarea>
-    <button onclick="importJson('classes')">Importar JSON</button>
-    <div id="classesList"></div>
-  </div>
+    <!-- CLUBES -->
+    <section class="card">
+      <h2 style="margin:0 0 12px">🏁 Gerenciar clubes</h2>
+      <div class="row">
+        <input id="clubName" placeholder="Novo clube…"/>
+        <button class="primary" id="btnCreateClub">Criar</button>
+      </div>
+      <div class="list" id="clubsList"></div>
+    </section>
+    <!-- USUARIOS -->
+    <section>
+      <hr class="my-4 border-gray-600">
 
-  <div class="card">
-    <h3>🧩 Gerenciar Especialidades</h3>
-    <div class="flex">
-      <input id="newSpec" placeholder="Nova especialidade">
-      <button onclick="createSpecialty()">Adicionar</button>
-    </div>
-    <textarea id="specJson" rows="4" placeholder='Cole JSON [{"name":"Especialidade 1"}]'></textarea>
-    <button onclick="importJson('specialties')">Importar JSON</button>
-    <div id="specList"></div>
-  </div>
+<h2 class="text-yellow-400 text-xl font-bold mb-2">
+  👥 Gerenciar Usuários
+</h2>
 
-  <div class="card">
-    <h3>🔍 Buscar Usuário</h3>
-    <input id="searchUser" placeholder="Nome do usuário">
-    <button onclick="searchUser()">Buscar</button>
-    <div id="userResults"></div>
-  </div>
+<div class="flex items-center gap-2 mb-3">
+  <input id="searchUser" type="text" placeholder="Buscar usuário..." class="p-2 rounded w-64 text-black">
+  <button id="btnSearchUser" class="bg-blue-600 px-3 py-2 rounded">Buscar</button>
+</div>
+
+<div id="usersList" class="bg-gray-900 p-3 rounded-lg border border-gray-700"></div>
+</section>
+  </main>
 </body>
 </html>

@@ -17,7 +17,6 @@ const els = {
   me: document.getElementById("me"),
 };
 
-// ---------- UTILIDADES ----------
 function ageFrom(dateStr) {
   if (!dateStr) return "—";
   const b = new Date(dateStr);
@@ -28,61 +27,42 @@ function ageFrom(dateStr) {
   return `${a} anos`;
 }
 
-function setLoading(el, msg = "Carregando…") {
-  el.innerHTML = `<div class='muted small'>${msg}</div>`;
-}
-
-// ---------- VERIFICAÇÃO DE TIER S ----------
 async function ensureTiers() {
   const { data: ures } = await db.auth.getUser();
   if (!ures?.user) {
     location.href = "./login.html";
     return;
   }
-
   // pega seu próprio profile/role
   const { data: me, error } = await db
     .from("profiles")
     .select("id, username, role")
     .eq("id", ures.user.id)
     .single();
-
   if (error || !me) {
     alert("Erro ao carregar seu perfil.");
     location.href = "./login.html";
     return;
   }
-
   els.me.textContent = `logado como ${me.username} (${me.role})`;
-
-  // redireciona tiers automaticamente para o painel correto
-  if (me.role === "tiers" && !location.pathname.includes("tiers-dashboard.html")) {
-    location.href = "./tiers-dashboard.html";
-    return;
-  }
-
   if (me.role !== "tiers") {
     alert("Acesso restrito ao Tier S.");
     location.href = "./dashboard.html";
-    return;
   }
 }
 
-// ---------- CLUBES ----------
+// ------- CLUBES -------
 async function loadClubs() {
-  setLoading(els.clubsList, "Carregando clubes…");
+  els.clubsList.innerHTML = "<div class='muted small'>Carregando clubes…</div>";
   const { data, error } = await db.from("clubs").select("id,name").order("created_at", { ascending: true });
-
   if (error) {
     els.clubsList.innerHTML = `<div class='small' style='color:#ff9a9a'>Erro: ${error.message}</div>`;
     return;
   }
-
   if (!data?.length) {
-    els.clubsList.innerHTML = "<div class='muted small'>Nenhum clube encontrado.</div>";
+    els.clubsList.innerHTML = "<div class='muted small'>Nenhum clube.</div>";
     return;
   }
-
   els.clubsList.innerHTML = data.map(c => `
     <div class="item">
       <div class="grow"><b>${c.name}</b></div>
@@ -93,36 +73,27 @@ async function loadClubs() {
 
 async function createClub() {
   const name = els.clubName.value.trim();
-  if (!name) return alert("Digite o nome do clube.");
-
-  document.body.style.cursor = "wait";
-  els.btnCreateClub.disabled = true;
-
+  if (!name) return;
   const { error } = await db.from("clubs").insert({ name, active: true });
-
-  document.body.style.cursor = "default";
-  els.btnCreateClub.disabled = false;
-
   if (error) return alert("Erro ao criar clube: " + error.message);
-
   els.clubName.value = "";
-  alert("✅ Clube criado com sucesso!");
+  alert("Clube criado!");
   loadClubs();
 }
 
 async function deleteClub(id) {
-  if (!confirm("Excluir este clube permanentemente?")) return;
+  if (!confirm("Excluir este clube?")) return;
   const { error } = await db.from("clubs").delete().eq("id", id);
   if (error) return alert("Erro ao excluir: " + error.message);
   loadClubs();
 }
 
-// ---------- USUÁRIOS ----------
+// ------- USUÁRIOS -------
 async function searchUsers() {
   const q = els.q.value.trim();
-  setLoading(els.usersList, "Buscando usuários…");
+  els.usersList.innerHTML = "<div class='muted small'>Buscando…</div>";
 
-  // busca perfis (limit 20 se vazio)
+  // Busca perfis; se q vazio, traz 20
   let query = db
     .from("profiles")
     .select("id, username, email, role, club_id, birthdate")
@@ -137,13 +108,13 @@ async function searchUsers() {
   ]);
 
   if (e1 || e2) {
-    els.usersList.innerHTML = `<div class='small' style='color:#ff9a9a'>Erro: ${(e1 || e2).message}</div>`;
+    els.usersList.innerHTML = `<div class='small' style='color:#ff9a9a'>Erro: ${(e1||e2).message}</div>`;
     return;
   }
 
   const clubMap = new Map(clubs.map(c => [c.id, c.name]));
   if (!users?.length) {
-    els.usersList.innerHTML = "<div class='muted small'>Nenhum resultado encontrado.</div>";
+    els.usersList.innerHTML = "<div class='muted small'>Sem resultados.</div>";
     return;
   }
 
@@ -172,19 +143,18 @@ async function toggleRole(userId, currentRole) {
   const next = currentRole === "tier2" ? "tier1" : "tier2";
   const { error } = await db.from("profiles").update({ role: next }).eq("id", userId);
   if (error) return alert("Erro: " + error.message);
-  alert(`Usuário atualizado para ${next.toUpperCase()}`);
   searchUsers();
 }
 
 async function softDelete(userId) {
   if (!confirm("Desativar este perfil? (pode impedir o acesso futuro)")) return;
+  // “Exclusão” no client é soft-delete (não remove auth.users)
   const { error } = await db.from("profiles").update({ role: "deleted", share_enabled: false }).eq("id", userId);
   if (error) return alert("Erro: " + error.message);
-  alert("Usuário desativado com sucesso.");
   searchUsers();
 }
 
-// ---------- BOOT ----------
+// ------- BOOT -------
 window.deleteClub = deleteClub;
 window.toggleRole = toggleRole;
 window.softDelete = softDelete;
@@ -193,7 +163,7 @@ els.btnCreateClub.addEventListener("click", createClub);
 els.btnSearch.addEventListener("click", searchUsers);
 els.q.addEventListener("input", () => { if (!els.q.value) searchUsers(); });
 
-(async function start() {
+(async function start(){
   await ensureTiers();
   await Promise.all([loadClubs(), searchUsers()]);
 })();
