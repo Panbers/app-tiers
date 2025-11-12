@@ -35,11 +35,7 @@
 
       const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
       if (error) return alert("Erro: " + error.message);
-      // redireciona tiers automaticamente para o painel correto
-  if (me.role === "tiers" && !location.pathname.includes("tiers-dashboard.html")) {
-    location.href = "./tiers-dashboard.html";
-    return;
-  }
+      window.location.href = "dashboard.html";
       
     }
   </script>
