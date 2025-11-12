@@ -34,8 +34,8 @@
       const email = `${username}@apptiers.local`;
 
       const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-      if (error) return alert("Erro: " + error.message);
-      else
+      //if (error) return alert("Erro: " + error.message);
+
       if (profile.role === 'tiers') {
       window.location.href = 'tiers-dashboard.html';
       } else {
