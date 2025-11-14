@@ -1,47 +1,216 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard - App Tiers</title>
-  <link rel="stylesheet" href="./style.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Painel Tier 1</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script defer src="dashboard.js"></script>
+  <script defer src="./dashboard.js"></script>
+
   <style>
-    body { background:#0f0f0f; color:white; font-family:Arial; padding:20px; }
-    .hidden { display:none; }
-    select, input, button { background:#1a1a1a; color:white; border:none; border-radius:6px; padding:6px; margin:5px; }
-    button { background:#006aff; cursor:pointer; }
-    button:hover { background:#0053cc; }
-    .section { margin-top:20px; padding:10px; border:1px solid #333; border-radius:8px; }
+    :root { color-scheme: dark; }
+    body {
+      margin:0;
+      background:#0b0b0b;
+      color:#fff;
+      font-family: Inter, system-ui, Arial;
+    }
+
+    header {
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding:16px 20px;
+      border-bottom:1px solid #222;
+    }
+
+    header h1 {
+      margin:0;
+      font-size:20px;
+    }
+
+    .pill {
+      padding:4px 10px;
+      border-radius:999px;
+      background:#161616;
+      border:1px solid #333;
+      font-size:12px;
+    }
+
+    .wrap {
+      max-width:1100px;
+      margin:20px auto;
+      padding:0 16px;
+      display:grid;
+      gap:20px;
+    }
+
+    .card {
+      background:#121212;
+      border:1px solid #222;
+      border-radius:12px;
+      padding:16px;
+    }
+
+    .title {
+      margin:0 0 12px;
+      font-size:18px;
+      font-weight:700;
+    }
+
+    .row {
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
+    input, button, select {
+      border-radius:8px;
+      border:1px solid #2a2a2a;
+      background:#161616;
+      color:#fff;
+      padding:10px;
+    }
+
+    button {
+      cursor:pointer;
+    }
+
+    button.primary {
+      background:#2d6bff;
+      border-color:#2d6bff;
+    }
+
+    button.danger {
+      background:#4a0000;
+      border-color:#700;
+    }
+
+    .list {
+      display:grid;
+      gap:10px;
+      margin-top:10px;
+    }
+
+    .item {
+      background:#151515;
+      border:1px solid #222;
+      border-radius:10px;
+      padding:12px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+    }
+
+    .small { font-size:12px; opacity:.9; }
+    .grow { flex:1 }
+
+    /* Duas colunas no PC */
+    .grid2 {
+      display:grid;
+      gap:20px;
+      grid-template-columns:1fr 1fr;
+    }
+    @media (max-width:900px){
+      .grid2 { grid-template-columns:1fr; }
+    }
   </style>
 </head>
+
 <body>
-  <h2>Dashboard</h2>
+<header>
+  <h1>⚡ Painel Tier 1</h1>
+  <span id="me" class="pill"></span>
+  <div class="grow"></div>
+  <a href="./login.html" class="pill" style="color:#fff;text-decoration:none">Sair</a>
+</header>
 
-  <div id="profile">
-    <p><b>Usuário:</b> <span id="username"></span></p>
-    <p><b>Função:</b> <span id="role"></span></p>
-    <p><b>Idade:</b> <span id="idade"></span></p>
+<main class="wrap">
+
+  <!-- SEÇÃO PERFIL -->
+  <section class="card">
+    <h2 class="title">👤 Meu Perfil</h2>
+    <div id="myInfo" class="small"></div>
+  </section>
+
+  <div class="grid2">
+
+    <!-- MEMBROS DO CLUBE -->
+    <section class="card">
+      <h2 class="title">🏁 Membros do Clube</h2>
+      <div id="clubMembers" class="list"></div>
+    </section>
+
+    <!-- ATRIBUIR CLASSES -->
+    <section class="card">
+      <h2 class="title">📚 Minhas Classes</h2>
+
+      <div class="row">
+        <select id="classSelect"></select>
+        <button class="primary" id="btnAddMyClass">Adicionar</button>
+      </div>
+
+      <div class="row" style="margin-top:10px;">
+        <input id="newClass" placeholder="Criar classe manualmente…">
+        <button class="primary" id="btnCreateClass">Criar</button>
+      </div>
+
+      <h3 style="margin-top:20px;font-size:14px;">Minhas classes:</h3>
+      <div id="myClasses" class="list"></div>
+    </section>
+
   </div>
 
-  <div id="clubInfo" class="section hidden">
-    <h3>Clube</h3>
-    <p id="clubName">—</p>
+  <!-- ESPECIALIDADES -->
+  <div class="grid2">
+
+    <section class="card">
+      <h2 class="title">🎯 Minhas Especialidades</h2>
+
+      <div class="row">
+        <select id="specSelect"></select>
+        <button class="primary" id="btnAddMySpec">Adicionar</button>
+      </div>
+
+      <div class="row" style="margin-top:10px;">
+        <input id="newSpec" placeholder="Criar especialidade manualmente…">
+        <button class="primary" id="btnCreateSpec">Criar</button>
+      </div>
+
+      <h3 style="margin-top:20px;font-size:14px;">Minhas especialidades:</h3>
+      <div id="mySpecs" class="list"></div>
+    </section>
+
+    <!-- ATRIBUIR PARA TIER 2 -->
+    <section class="card">
+      <h2 class="title">🎓 Atribuir a Tier 2</h2>
+
+      <div>
+        <label class="small">Selecione o usuário Tier 2:</label>
+        <select id="targetUser"></select>
+      </div>
+
+      <h3 style="margin-top:20px;margin-bottom:10px;font-size:14px;">Classe:</h3>
+      <div class="row">
+        <select id="classSelect2"></select>
+        <button class="primary" id="btnAddClassToUser">Adicionar</button>
+      </div>
+
+      <h3 style="margin-top:20px;margin-bottom:10px;font-size:14px;">Especialidade:</h3>
+      <div class="row">
+        <select id="specSelect2"></select>
+        <button class="primary" id="btnAddSpecToUser">Adicionar</button>
+      </div>
+
+      <h3 style="margin-top:20px;font-size:14px;">Atribuições do usuário:</h3>
+      <div id="targetAssignments" class="list"></div>
+    </section>
+
   </div>
 
-  <div id="tier1Panel" class="section hidden">
-    <h3>👥 Painel Tier 1 – Gerenciar Membros do Clube</h3>
-    <div id="clubMembers"></div>
-  </div>
+</main>
 
-  <div id="tierSPanel" class="section hidden">
-    <h3>🏆 Painel Tier S – Gerenciar Todos os Clubes</h3>
-    <input id="newClubName" placeholder="Novo nome do clube" />
-    <button onclick="criarClube()">Criar Clube</button>
-    <div id="allClubs"></div>
-  </div>
-
-  <button onclick="logout()">Sair</button>
 </body>
 </html>
