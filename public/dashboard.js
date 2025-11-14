@@ -67,7 +67,7 @@ async function loadMe() {
 
   const { data: profile, error } = await db
     .from("profiles")
-    .select("*")
+    .select("id, username, role, club_id, birthdate, clubs(name)")
     .eq("id", auth.user.id)
     .single();
 
@@ -89,8 +89,7 @@ async function loadMe() {
 
   els.myInfo.innerHTML = `
     <div>Nome: <b>${profile.username}</b></div>
-    <div>Email: ${profile.email}</div>
-    <div>Clube: ${profile.club_id || "—"}</div>
+    <div>Clube: ${profile.clubs?.name || "—"}</div>
     <div>Idade: ${ageFrom(profile.birthdate)}</div>
   `;
 }
